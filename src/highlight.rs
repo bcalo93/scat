@@ -3,13 +3,13 @@ use crate::language::Language;
 
 #[cfg(test)]
 pub fn highlight_line(line: &str, language: Language) -> String {
-    let mut highlighter = Highlighter::new(language);
+    let mut highlighter = SimpleHighlighter::new(language);
     highlighter.highlight_line(line)
 }
 
 #[cfg(test)]
 pub fn highlight_document(content: &str, language: Language) -> String {
-    let mut highlighter = Highlighter::new(language);
+    let mut highlighter = SimpleHighlighter::new(language);
     let mut output = String::new();
 
     for line in content.lines() {
@@ -20,25 +20,31 @@ pub fn highlight_document(content: &str, language: Language) -> String {
     output
 }
 
-pub struct Highlighter {
+pub trait SyntaxHighlighter {
+    fn highlight_line(&mut self, line: &str) -> String;
+}
+
+pub struct SimpleHighlighter {
     language: Language,
     in_block_comment: bool,
 }
 
-impl Highlighter {
+impl SimpleHighlighter {
     pub fn new(language: Language) -> Self {
         Self {
             language,
             in_block_comment: false,
         }
     }
+}
 
-    pub fn highlight_line(&mut self, line: &str) -> String {
+impl SyntaxHighlighter for SimpleHighlighter {
+    fn highlight_line(&mut self, line: &str) -> String {
         highlight_line_with_state(line, self)
     }
 }
 
-fn highlight_line_with_state(line: &str, state: &mut Highlighter) -> String {
+fn highlight_line_with_state(line: &str, state: &mut SimpleHighlighter) -> String {
     let language = state.language;
     if language == Language::PlainText {
         return line.to_string();
