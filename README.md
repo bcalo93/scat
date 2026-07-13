@@ -12,6 +12,8 @@ Run it locally before installing:
 ```bash
 cargo run -- src/main.rs
 cargo run -- --no-line-numbers src/main.rs
+cargo run -- --color src/main.rs
+cargo run -- --pager src/main.rs
 cargo run -- --language tsx -
 cat Cargo.toml | cargo run --
 ```
@@ -37,12 +39,20 @@ cat component.txt | mybat --language tsx -
 -l, --language <lang>   Force language highlighting
 -n, --line-numbers      Show line numbers (default)
     --no-line-numbers   Hide line numbers
+    --color             Force ANSI colors
     --plain             Disable colors and highlighting
     --no-color          Disable colors and highlighting
+    --pager             Send output to $PAGER or less -R
 -h, --help              Show help
 ```
 
-`NO_COLOR=1` also disables ANSI output.
+By default, color is enabled only when stdout is a terminal. This avoids writing
+ANSI escapes when redirecting output to a file or piping to another command.
+`--color` forces ANSI colors, and `NO_COLOR=1` disables ANSI output.
+
+`--pager` sends rendered output to `$PAGER`. If `$PAGER` is not set, `mybat`
+uses `less -R`. The pager command is split on whitespace and is not executed
+through a shell.
 
 ## Supported Languages
 
@@ -69,6 +79,7 @@ Use `--language <lang>` for anything else.
 - `language`: language detection by extension, name, or lightweight content inference.
 - `highlight`: ANSI syntax highlighting behind the `SyntaxHighlighter` trait.
 - `render`: line numbering and output assembly.
+- `render_to_writer`: streaming output writer used by the CLI.
 - `ansi`: raw ANSI escape helpers.
 
 The default highlighter is `SimpleHighlighter`. It is heuristic and stateful
@@ -88,13 +99,11 @@ What this gives up for now:
 - No semantic syntax parsing.
 - No themes.
 - Limited JSX/TSX understanding.
-- No pager integration.
 - No terminal width or wrapping logic.
 
 ## Roadmap
 
-- Add a streaming render path for large files.
-- Detect TTY output and disable color automatically when piping to files.
+- Add a streaming input path for large files.
 - Add snapshot-style tests for rendered ANSI output.
 - Add a `SyntaxHighlighter` implementation backed by `syntect` or `tree-sitter`
   if higher-fidelity highlighting becomes more important than zero dependencies.

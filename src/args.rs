@@ -8,9 +8,17 @@ use crate::language::Language;
 pub struct Config {
     pub path: Option<PathBuf>,
     pub line_numbers: bool,
-    pub color: bool,
+    pub color: ColorMode,
     pub language: Option<Language>,
+    pub pager: bool,
     pub help: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ColorMode {
+    Auto,
+    Always,
+    Never,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,8 +50,9 @@ impl Config {
     {
         let mut path = None;
         let mut line_numbers = true;
-        let mut color = true;
+        let mut color = ColorMode::Auto;
         let mut language = None;
+        let mut pager = false;
         let mut help = false;
         let mut iter = args.into_iter();
 
@@ -63,7 +72,9 @@ impl Config {
                 }
                 "-n" | "--line-numbers" => line_numbers = true,
                 "--no-line-numbers" => line_numbers = false,
-                "--plain" | "--no-color" => color = false,
+                "--color" => color = ColorMode::Always,
+                "--plain" | "--no-color" => color = ColorMode::Never,
+                "--pager" => pager = true,
                 "-" => set_path(&mut path, PathBuf::from("-"))?,
                 _ if arg.starts_with('-') => return Err(ArgsError::UnknownFlag(arg)),
                 _ => set_path(&mut path, PathBuf::from(arg))?,
@@ -75,6 +86,7 @@ impl Config {
             line_numbers,
             color,
             language,
+            pager,
             help,
         })
     }
@@ -89,12 +101,12 @@ fn set_path(path: &mut Option<PathBuf>, value: PathBuf) -> Result<(), ArgsError>
 }
 
 pub fn help_text() -> &'static str {
-    "Usage: mybat [OPTIONS] [FILE|-]\n\nOptions:\n  -l, --language <lang>   Force language highlighting\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n      --plain             Disable colors and highlighting\n      --no-color          Disable colors and highlighting\n  -h, --help              Show this help\n\nSupported languages: json, js, ts, jsx, tsx, go, rust, swift, kotlin, java\nWhen FILE is omitted or '-' is used, mybat reads from stdin.\nSet NO_COLOR to disable ANSI output."
+    "Usage: mybat [OPTIONS] [FILE|-]\n\nOptions:\n  -l, --language <lang>   Force language highlighting\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n      --color             Force ANSI colors\n      --plain             Disable colors and highlighting\n      --no-color          Disable colors and highlighting\n      --pager             Send output to $PAGER or less -R\n  -h, --help              Show this help\n\nSupported languages: json, js, ts, jsx, tsx, go, rust, swift, kotlin, java\nWhen FILE is omitted or '-' is used, mybat reads from stdin.\nBy default, color is enabled only for terminal output. Set NO_COLOR to disable ANSI output."
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ArgsError, Config};
+    use super::{ArgsError, ColorMode, Config};
     use std::path::PathBuf;
 
     #[test]
@@ -102,8 +114,9 @@ mod tests {
         let config = Config::parse(["src/main.rs"]).unwrap();
         assert_eq!(config.path, Some(PathBuf::from("src/main.rs")));
         assert!(config.line_numbers);
-        assert!(config.color);
+        assert_eq!(config.color, ColorMode::Auto);
         assert_eq!(config.language, None);
+        assert!(!config.pager);
     }
 
     #[test]
@@ -122,7 +135,19 @@ mod tests {
     #[test]
     fn parses_plain_output() {
         let config = Config::parse(["--plain", "src/main.rs"]).unwrap();
-        assert!(!config.color);
+        assert_eq!(config.color, ColorMode::Never);
+    }
+
+    #[test]
+    fn parses_forced_color() {
+        let config = Config::parse(["--color", "src/main.rs"]).unwrap();
+        assert_eq!(config.color, ColorMode::Always);
+    }
+
+    #[test]
+    fn parses_pager() {
+        let config = Config::parse(["--pager", "src/main.rs"]).unwrap();
+        assert!(config.pager);
     }
 
     #[test]
