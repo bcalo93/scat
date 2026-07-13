@@ -6,6 +6,7 @@ pub fn render(content: &str, language: Language, line_numbers: bool, color: bool
     let line_count = content.lines().count().max(1);
     let width = line_count.to_string().len();
     let mut output = String::new();
+    let mut highlighter = highlight::Highlighter::new(language);
 
     for (index, line) in content.lines().enumerate() {
         if line_numbers {
@@ -19,7 +20,7 @@ pub fn render(content: &str, language: Language, line_numbers: bool, color: bool
             }
         }
         if color {
-            output.push_str(&highlight::highlight_line(line, language));
+            output.push_str(&highlighter.highlight_line(line));
         } else {
             output.push_str(line);
         }
