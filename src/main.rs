@@ -23,7 +23,19 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let source = input::read_source(config.path.as_deref())?;
-    let lang = match source
+    let lang = match config.language {
+        Some(lang) => lang,
+        None => detect_language(&source),
+    };
+    let color = config.color && std::env::var_os("NO_COLOR").is_none();
+
+    let output = render::render(&source.content, lang, config.line_numbers, color);
+    print!("{output}");
+    Ok(())
+}
+
+fn detect_language(source: &input::Source) -> language::Language {
+    match source
         .path
         .as_deref()
         .and_then(language::Language::from_path)
@@ -31,9 +43,5 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         Some(lang) => lang,
         None if source.path.is_none() => language::Language::infer_from_content(&source.content),
         None => language::Language::PlainText,
-    };
-
-    let output = render::render(&source.content, lang, config.line_numbers);
-    print!("{output}");
-    Ok(())
+    }
 }

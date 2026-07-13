@@ -2,15 +2,21 @@ use std::error::Error;
 use std::fmt;
 use std::path::PathBuf;
 
+use crate::language::Language;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     pub path: Option<PathBuf>,
     pub line_numbers: bool,
+    pub color: bool,
+    pub language: Option<Language>,
     pub help: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ArgsError {
+    InvalidLanguage(String),
+    MissingValue(&'static str),
     TooManyInputs,
     UnknownFlag(String),
 }
@@ -18,6 +24,8 @@ pub enum ArgsError {
 impl fmt::Display for ArgsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::InvalidLanguage(language) => write!(f, "unsupported language '{language}'"),
+            Self::MissingValue(flag) => write!(f, "missing value for '{flag}'"),
             Self::TooManyInputs => write!(f, "too many input paths; pass a single file or '-'"),
             Self::UnknownFlag(flag) => write!(f, "unknown flag '{flag}'"),
         }
@@ -34,14 +42,28 @@ impl Config {
     {
         let mut path = None;
         let mut line_numbers = true;
+        let mut color = true;
+        let mut language = None;
         let mut help = false;
+        let mut iter = args.into_iter();
 
-        for raw in args {
+        while let Some(raw) = iter.next() {
             let arg = raw.into();
             match arg.as_str() {
                 "-h" | "--help" => help = true,
+                "-l" | "--language" => {
+                    let value = iter
+                        .next()
+                        .map(Into::into)
+                        .ok_or(ArgsError::MissingValue("--language"))?;
+                    language = Some(
+                        Language::from_name(&value)
+                            .ok_or_else(|| ArgsError::InvalidLanguage(value.clone()))?,
+                    );
+                }
                 "-n" | "--line-numbers" => line_numbers = true,
                 "--no-line-numbers" => line_numbers = false,
+                "--plain" | "--no-color" => color = false,
                 "-" => set_path(&mut path, PathBuf::from("-"))?,
                 _ if arg.starts_with('-') => return Err(ArgsError::UnknownFlag(arg)),
                 _ => set_path(&mut path, PathBuf::from(arg))?,
@@ -51,6 +73,8 @@ impl Config {
         Ok(Self {
             path,
             line_numbers,
+            color,
+            language,
             help,
         })
     }
@@ -65,7 +89,7 @@ fn set_path(path: &mut Option<PathBuf>, value: PathBuf) -> Result<(), ArgsError>
 }
 
 pub fn help_text() -> &'static str {
-    "Usage: mybat [OPTIONS] [FILE|-]\n\nOptions:\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n  -h, --help              Show this help\n\nWhen FILE is omitted or '-' is used, mybat reads from stdin."
+    "Usage: mybat [OPTIONS] [FILE|-]\n\nOptions:\n  -l, --language <lang>   Force language highlighting\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n      --plain             Disable colors and highlighting\n      --no-color          Disable colors and highlighting\n  -h, --help              Show this help\n\nSupported languages: json, js, ts, jsx, tsx, go, rust, swift, kotlin, java\nWhen FILE is omitted or '-' is used, mybat reads from stdin.\nSet NO_COLOR to disable ANSI output."
 }
 
 #[cfg(test)]
@@ -78,6 +102,8 @@ mod tests {
         let config = Config::parse(["src/main.rs"]).unwrap();
         assert_eq!(config.path, Some(PathBuf::from("src/main.rs")));
         assert!(config.line_numbers);
+        assert!(config.color);
+        assert_eq!(config.language, None);
     }
 
     #[test]
@@ -85,6 +111,30 @@ mod tests {
         let config = Config::parse(["--no-line-numbers", "-"]).unwrap();
         assert_eq!(config.path, Some(PathBuf::from("-")));
         assert!(!config.line_numbers);
+    }
+
+    #[test]
+    fn parses_forced_language() {
+        let config = Config::parse(["--language", "typescript", "-"]).unwrap();
+        assert_eq!(config.language, Some(crate::language::Language::TypeScript));
+    }
+
+    #[test]
+    fn parses_plain_output() {
+        let config = Config::parse(["--plain", "src/main.rs"]).unwrap();
+        assert!(!config.color);
+    }
+
+    #[test]
+    fn rejects_missing_language_value() {
+        let err = Config::parse(["--language"]).unwrap_err();
+        assert_eq!(err, ArgsError::MissingValue("--language"));
+    }
+
+    #[test]
+    fn rejects_invalid_language() {
+        let err = Config::parse(["--language", "ruby"]).unwrap_err();
+        assert_eq!(err, ArgsError::InvalidLanguage("ruby".to_string()));
     }
 
     #[test]

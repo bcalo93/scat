@@ -16,6 +16,23 @@ pub enum Language {
 }
 
 impl Language {
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name.to_ascii_lowercase().as_str() {
+            "json" => Some(Self::Json),
+            "js" | "javascript" => Some(Self::JavaScript),
+            "ts" | "typescript" => Some(Self::TypeScript),
+            "jsx" => Some(Self::Jsx),
+            "tsx" => Some(Self::Tsx),
+            "go" | "golang" => Some(Self::Go),
+            "rs" | "rust" => Some(Self::Rust),
+            "swift" => Some(Self::Swift),
+            "kt" | "kts" | "kotlin" => Some(Self::Kotlin),
+            "java" => Some(Self::Java),
+            "text" | "txt" | "plain" | "plaintext" => Some(Self::PlainText),
+            _ => None,
+        }
+    }
+
     pub fn from_path(path: &Path) -> Option<Self> {
         let ext = path.extension()?.to_str()?.to_ascii_lowercase();
         match ext.as_str() {
@@ -326,6 +343,17 @@ mod tests {
             Some(Language::Kotlin)
         );
         assert_eq!(Language::from_path(Path::new("notes.txt")), None);
+    }
+
+    #[test]
+    fn detects_languages_by_name() {
+        assert_eq!(Language::from_name("rust"), Some(Language::Rust));
+        assert_eq!(
+            Language::from_name("typescript"),
+            Some(Language::TypeScript)
+        );
+        assert_eq!(Language::from_name("plain"), Some(Language::PlainText));
+        assert_eq!(Language::from_name("ruby"), None);
     }
 
     #[test]
