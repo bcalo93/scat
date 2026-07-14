@@ -15,6 +15,8 @@ cargo run -- --no-line-numbers src/main.rs
 cargo run -- --color src/main.rs
 cargo run -- --pager src/main.rs
 cargo run -- --language tsx -
+cargo run -- --diff
+cargo run -- --diff --staged
 cat Cargo.toml | cargo run --
 ```
 
@@ -31,11 +33,17 @@ mybat src/main.rs
 mybat --no-line-numbers src/main.rs
 cat file.json | mybat
 cat component.txt | mybat --language tsx -
+mybat --diff
+mybat --diff --staged
+mybat --diff src/main.rs
+mybat --diff HEAD~1 HEAD
 ```
 
 ## Options
 
 ```text
+    --diff              Show git diff output
+    --staged            Show staged git diff output
 -l, --language <lang>   Force language highlighting
 -n, --line-numbers      Show line numbers (default)
     --no-line-numbers   Hide line numbers
@@ -72,12 +80,44 @@ Detection is extension-based for files and intentionally simple:
 For stdin, `mybat` infers JSON when the content starts with `{` or `[`.
 Use `--language <lang>` for anything else.
 
+## Git Diff
+
+`mybat` can render Git diffs without invoking a shell:
+
+```bash
+mybat --diff
+mybat --diff --staged
+mybat --diff src/main.rs
+mybat --diff HEAD~1 HEAD
+mybat --diff --pager
+```
+
+The current diff mode supports:
+
+- no targets: `git diff`
+- `--staged`: `git diff --staged`
+- one target: `git diff -- <path>`
+- two targets: `git diff <left> <right>`
+
+Diff output is highlighted by patch line type:
+
+- `diff --git` and file metadata
+- `---` and `+++` file markers
+- `@@` hunk headers
+- added and removed lines
+
+Diff mode is intentionally simple. It does not parse hunks semantically, does
+not show original file line numbers, and does not support multiple explicit
+paths in one command yet.
+
 ## Architecture
 
 - `args`: manual CLI parsing with standard library types.
+- `git`: `git diff` command construction and execution without shell expansion.
 - `input`: file and stdin reading with explicit user-facing errors.
 - `language`: language detection by extension, name, or lightweight content inference.
 - `highlight`: ANSI syntax highlighting behind the `SyntaxHighlighter` trait.
+- `diff_render`: ANSI highlighting for unified diff output.
 - `render`: line numbering and output assembly.
 - `render_to_writer`: streaming output writer used by the CLI.
 - `ansi`: raw ANSI escape helpers.
