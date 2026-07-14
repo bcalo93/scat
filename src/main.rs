@@ -1,5 +1,6 @@
 mod ansi;
 mod args;
+mod git;
 mod highlight;
 mod input;
 mod language;
@@ -24,28 +25,51 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let source = input::read_source(config.path.as_deref())?;
-    let lang = match config.language {
-        Some(lang) => lang,
-        None => detect_language(&source),
-    };
     let color = should_use_color(
         config.color,
         io::stdout().is_terminal(),
         std::env::var_os("NO_COLOR").is_some(),
     );
 
-    if config.pager {
-        render_to_pager(&source.content, lang, config.line_numbers, color)?;
+    let content = match &config.mode {
+        args::Mode::View { path } => {
+            let source = input::read_source(path.as_deref())?;
+            let lang = match config.language {
+                Some(lang) => lang,
+                None => detect_language(&source),
+            };
+            return write_output(
+                &source.content,
+                lang,
+                config.line_numbers,
+                color,
+                config.pager,
+            );
+        }
+        args::Mode::Diff(diff_config) => git::diff(diff_config)?,
+    };
+
+    write_output(
+        &content,
+        language::Language::PlainText,
+        config.line_numbers,
+        color,
+        config.pager,
+    )
+}
+
+fn write_output(
+    content: &str,
+    language: language::Language,
+    line_numbers: bool,
+    color: bool,
+    pager: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if pager {
+        render_to_pager(content, language, line_numbers, color)?;
     } else {
         let mut stdout = io::stdout().lock();
-        render::render_to_writer(
-            &source.content,
-            lang,
-            config.line_numbers,
-            color,
-            &mut stdout,
-        )?;
+        render::render_to_writer(content, language, line_numbers, color, &mut stdout)?;
     }
     Ok(())
 }
