@@ -1,5 +1,6 @@
 mod ansi;
 mod args;
+mod diff_render;
 mod git;
 mod highlight;
 mod input;
@@ -31,7 +32,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         std::env::var_os("NO_COLOR").is_some(),
     );
 
-    let content = match &config.mode {
+    match &config.mode {
         args::Mode::View { path } => {
             let source = input::read_source(path.as_deref())?;
             let lang = match config.language {
@@ -46,16 +47,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 config.pager,
             );
         }
-        args::Mode::Diff(diff_config) => git::diff(diff_config)?,
-    };
-
-    write_output(
-        &content,
-        language::Language::PlainText,
-        config.line_numbers,
-        color,
-        config.pager,
-    )
+        args::Mode::Diff(diff_config) => {
+            let diff = git::diff(diff_config)?;
+            write_diff_output(&diff, config.line_numbers, color, config.pager)
+        }
+    }
 }
 
 fn write_output(
@@ -70,6 +66,21 @@ fn write_output(
     } else {
         let mut stdout = io::stdout().lock();
         render::render_to_writer(content, language, line_numbers, color, &mut stdout)?;
+    }
+    Ok(())
+}
+
+fn write_diff_output(
+    content: &str,
+    line_numbers: bool,
+    color: bool,
+    pager: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if pager {
+        render_diff_to_pager(content, line_numbers, color)?;
+    } else {
+        let mut stdout = io::stdout().lock();
+        diff_render::render_to_writer(content, line_numbers, color, &mut stdout)?;
     }
     Ok(())
 }
@@ -92,6 +103,29 @@ fn render_to_pager(
 
     if let Some(mut stdin) = child.stdin.take() {
         render::render_to_writer(content, language, line_numbers, color, &mut stdin)?;
+    }
+
+    child.wait()?;
+    Ok(())
+}
+
+fn render_diff_to_pager(
+    content: &str,
+    line_numbers: bool,
+    color: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let pager = std::env::var("PAGER").unwrap_or_else(|_| "less -R".to_string());
+    let mut parts = pager.split_whitespace();
+    let program = parts.next().unwrap_or("less");
+    let args = parts.collect::<Vec<_>>();
+
+    let mut child = Command::new(program)
+        .args(args)
+        .stdin(Stdio::piped())
+        .spawn()?;
+
+    if let Some(mut stdin) = child.stdin.take() {
+        diff_render::render_to_writer(content, line_numbers, color, &mut stdin)?;
     }
 
     child.wait()?;
