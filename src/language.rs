@@ -12,6 +12,8 @@ pub enum Language {
     Swift,
     Kotlin,
     Java,
+    Markdown,
+    Mdx,
     PlainText,
 }
 
@@ -28,6 +30,8 @@ impl Language {
             "swift" => Some(Self::Swift),
             "kt" | "kts" | "kotlin" => Some(Self::Kotlin),
             "java" => Some(Self::Java),
+            "md" | "markdown" => Some(Self::Markdown),
+            "mdx" => Some(Self::Mdx),
             "text" | "txt" | "plain" | "plaintext" => Some(Self::PlainText),
             _ => None,
         }
@@ -46,6 +50,8 @@ impl Language {
             "swift" => Some(Self::Swift),
             "kt" | "kts" => Some(Self::Kotlin),
             "java" => Some(Self::Java),
+            "md" | "markdown" | "mdown" | "mkd" => Some(Self::Markdown),
+            "mdx" => Some(Self::Mdx),
             _ => None,
         }
     }
@@ -61,7 +67,7 @@ impl Language {
 
     pub fn keywords(self) -> &'static [&'static str] {
         match self {
-            Self::Json | Self::PlainText => &[],
+            Self::Json | Self::Markdown | Self::Mdx | Self::PlainText => &[],
             Self::JavaScript | Self::Jsx => &[
                 "async",
                 "await",
@@ -342,12 +348,23 @@ mod tests {
             Language::from_path(Path::new("build.gradle.kts")),
             Some(Language::Kotlin)
         );
+        assert_eq!(
+            Language::from_path(Path::new("README.md")),
+            Some(Language::Markdown)
+        );
+        assert_eq!(
+            Language::from_path(Path::new("Button.stories.mdx")),
+            Some(Language::Mdx)
+        );
         assert_eq!(Language::from_path(Path::new("notes.txt")), None);
     }
 
     #[test]
     fn detects_languages_by_name() {
         assert_eq!(Language::from_name("rust"), Some(Language::Rust));
+        assert_eq!(Language::from_name("markdown"), Some(Language::Markdown));
+        assert_eq!(Language::from_name("md"), Some(Language::Markdown));
+        assert_eq!(Language::from_name("mdx"), Some(Language::Mdx));
         assert_eq!(
             Language::from_name("typescript"),
             Some(Language::TypeScript)

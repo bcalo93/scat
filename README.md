@@ -76,6 +76,8 @@ Detection is extension-based for files and intentionally simple:
 - Swift
 - Kotlin
 - Java
+- Markdown
+- MDX
 
 For stdin, `mybat` infers JSON when the content starts with `{` or `[`.
 Use `--language <lang>` for anything else.
@@ -138,6 +140,8 @@ What this gives up for now:
 
 - No semantic syntax parsing.
 - No themes.
+- Limited Markdown understanding.
+- Limited MDX understanding.
 - Limited JSX/TSX understanding.
 - No terminal width or wrapping logic.
 
