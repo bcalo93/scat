@@ -1,6 +1,6 @@
-# mybat
+# scat
 
-`mybat` is a small `bat`-like terminal file viewer written in Rust.
+`scat` is a small `bat`-like terminal file viewer written in Rust.
 
 The current goal is to stay dependency-free while keeping the code modular
 enough to replace the hand-written highlighter later.
@@ -29,14 +29,14 @@ cargo install --path .
 Then use:
 
 ```bash
-mybat src/main.rs
-mybat --no-line-numbers src/main.rs
-cat file.json | mybat
-cat component.txt | mybat --language tsx -
-mybat --diff
-mybat --diff --staged
-mybat --diff src/main.rs
-mybat --diff HEAD~1 HEAD
+scat src/main.rs
+scat --no-line-numbers src/main.rs
+cat file.json | scat
+cat component.txt | scat --language tsx -
+scat --diff
+scat --diff --staged
+scat --diff src/main.rs
+scat --diff HEAD~1 HEAD
 ```
 
 ## Options
@@ -58,7 +58,7 @@ By default, color is enabled only when stdout is a terminal. This avoids writing
 ANSI escapes when redirecting output to a file or piping to another command.
 `--color` forces ANSI colors, and `NO_COLOR=1` disables ANSI output.
 
-`--pager` sends rendered output to `$PAGER`. If `$PAGER` is not set, `mybat`
+`--pager` sends rendered output to `$PAGER`. If `$PAGER` is not set, `scat`
 uses `less -R`. The pager command is split on whitespace and is not executed
 through a shell.
 
@@ -79,19 +79,19 @@ Detection is extension-based for files and intentionally simple:
 - Markdown
 - MDX
 
-For stdin, `mybat` infers JSON when the content starts with `{` or `[`.
+For stdin, `scat` infers JSON when the content starts with `{` or `[`.
 Use `--language <lang>` for anything else.
 
 ## Git Diff
 
-`mybat` can render Git diffs without invoking a shell:
+`scat` can render Git diffs without invoking a shell:
 
 ```bash
-mybat --diff
-mybat --diff --staged
-mybat --diff src/main.rs
-mybat --diff HEAD~1 HEAD
-mybat --diff --pager
+scat --diff
+scat --diff --staged
+scat --diff src/main.rs
+scat --diff HEAD~1 HEAD
+scat --diff --pager
 ```
 
 The current diff mode supports:

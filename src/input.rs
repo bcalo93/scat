@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn reads_regular_file() {
-        let path = temp_file_path("mybat-input-test.txt");
+        let path = temp_file_path("scat-input-test.txt");
         fs::write(&path, "hello\n").unwrap();
 
         let source = read_source(Some(&path)).unwrap();
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn rejects_empty_file() {
-        let path = temp_file_path("mybat-empty-input-test.txt");
+        let path = temp_file_path("scat-empty-input-test.txt");
         fs::write(&path, "").unwrap();
 
         let err = read_source(Some(&path)).unwrap_err();

@@ -13,7 +13,7 @@ use std::process::{Command, Stdio};
 
 fn main() {
     if let Err(err) = run() {
-        eprintln!("mybat: {err}");
+        eprintln!("scat: {err}");
         process::exit(1);
     }
 }

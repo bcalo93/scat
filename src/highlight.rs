@@ -531,9 +531,9 @@ mod tests {
 
     #[test]
     fn highlights_json_keys_differently_from_values() {
-        let highlighted = highlight_line("\"name\": \"mybat\"", Language::Json);
+        let highlighted = highlight_line("\"name\": \"scat\"", Language::Json);
         assert!(highlighted.contains(&format!("{}\"name\"{}", ansi::BLUE, ansi::RESET)));
-        assert!(highlighted.contains(&format!("{}\"mybat\"{}", ansi::GREEN, ansi::RESET)));
+        assert!(highlighted.contains(&format!("{}\"scat\"{}", ansi::GREEN, ansi::RESET)));
     }
 
     #[test]
@@ -565,10 +565,10 @@ mod tests {
     #[test]
     fn highlights_markdown_inline_code_and_links() {
         let highlighted = highlight_line(
-            "Use `mybat` from [docs](https://example.com)",
+            "Use `scat` from [docs](https://example.com)",
             Language::Markdown,
         );
-        assert!(highlighted.contains(&format!("{}`mybat`{}", ansi::GREEN, ansi::RESET)));
+        assert!(highlighted.contains(&format!("{}`scat`{}", ansi::GREEN, ansi::RESET)));
         assert!(highlighted.contains(&format!("{}docs{}", ansi::BLUE, ansi::RESET)));
         assert!(highlighted.contains(&format!(
             "{}https://example.com{}",
