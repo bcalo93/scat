@@ -11,6 +11,7 @@ Run it locally before installing:
 
 ```bash
 cargo run -- src/main.rs
+cargo run -- --full src/main.rs
 cargo run -- --no-line-numbers src/main.rs
 cargo run -- --color src/main.rs
 cargo run -- --pager src/main.rs
@@ -30,6 +31,7 @@ Then use:
 
 ```bash
 scat src/main.rs
+scat --full src/main.rs
 scat --no-line-numbers src/main.rs
 cat file.json | scat
 cat component.txt | scat --language tsx -
@@ -51,6 +53,7 @@ scat --diff HEAD~1 HEAD
     --plain             Disable colors and highlighting
     --no-color          Disable colors and highlighting
     --pager             Send output to $PAGER or less -R
+    --full              Print full output without a pager
 -h, --help              Show help
 ```
 
@@ -58,9 +61,10 @@ By default, color is enabled only when stdout is a terminal. This avoids writing
 ANSI escapes when redirecting output to a file or piping to another command.
 `--color` forces ANSI colors, and `NO_COLOR=1` disables ANSI output.
 
-`--pager` sends rendered output to `$PAGER`. If `$PAGER` is not set, `scat`
-uses `less -R`. The pager command is split on whitespace and is not executed
-through a shell.
+By default, file output opens in `$PAGER` when stdout is a terminal. If `$PAGER`
+is not set, `scat` uses `less -R`. Use `--full` to print the full rendered file
+directly. Piped stdin and redirected output still print directly. The pager
+command is split on whitespace and is not executed through a shell.
 
 ## Supported Languages
 
@@ -93,6 +97,9 @@ scat --diff src/main.rs
 scat --diff HEAD~1 HEAD
 scat --diff --pager
 ```
+
+Diff output prints directly by default. Use `--diff --pager` to send it through
+the pager explicitly.
 
 The current diff mode supports:
 

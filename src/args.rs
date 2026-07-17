@@ -11,6 +11,7 @@ pub struct Config {
     pub color: ColorMode,
     pub language: Option<Language>,
     pub pager: bool,
+    pub full: bool,
     pub help: bool,
 }
 
@@ -69,6 +70,7 @@ impl Config {
         let mut color = ColorMode::Auto;
         let mut language = None;
         let mut pager = false;
+        let mut full = false;
         let mut help = false;
         let mut diff = false;
         let mut staged = false;
@@ -94,6 +96,7 @@ impl Config {
                 "--color" => color = ColorMode::Always,
                 "--plain" | "--no-color" => color = ColorMode::Never,
                 "--pager" => pager = true,
+                "--full" => full = true,
                 "--diff" => diff = true,
                 "--staged" => staged = true,
                 "-" if !diff => set_path(&mut path, PathBuf::from("-"))?,
@@ -124,6 +127,7 @@ impl Config {
             color,
             language,
             pager,
+            full,
             help,
         })
     }
@@ -138,7 +142,7 @@ fn set_path(path: &mut Option<PathBuf>, value: PathBuf) -> Result<(), ArgsError>
 }
 
 pub fn help_text() -> &'static str {
-    "Usage: scat [OPTIONS] [FILE|-]\n       scat --diff [--staged] [PATH|REF REF]\n\nOptions:\n      --diff              Show git diff output\n      --staged            Show staged git diff output\n  -l, --language <lang>   Force language highlighting\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n      --color             Force ANSI colors\n      --plain             Disable colors and highlighting\n      --no-color          Disable colors and highlighting\n      --pager             Send output to $PAGER or less -R\n  -h, --help              Show this help\n\nSupported languages: json, js, ts, jsx, tsx, go, rust, swift, kotlin, java, markdown, mdx\nWhen FILE is omitted or '-' is used, scat reads from stdin.\nBy default, color is enabled only for terminal output. Set NO_COLOR to disable ANSI output."
+    "Usage: scat [OPTIONS] [FILE|-]\n       scat --diff [--staged] [PATH|REF REF]\n\nOptions:\n      --diff              Show git diff output\n      --staged            Show staged git diff output\n  -l, --language <lang>   Force language highlighting\n  -n, --line-numbers      Show line numbers (default)\n      --no-line-numbers   Hide line numbers\n      --color             Force ANSI colors\n      --plain             Disable colors and highlighting\n      --no-color          Disable colors and highlighting\n      --pager             Send output to $PAGER or less -R\n      --full              Print full output without a pager\n  -h, --help              Show this help\n\nSupported languages: json, js, ts, jsx, tsx, go, rust, swift, kotlin, java, markdown, mdx\nWhen FILE is omitted or '-' is used, scat reads from stdin.\nBy default, files open in $PAGER or less -R when stdout is a terminal. Use --full to print directly.\nBy default, color is enabled only for terminal output. Set NO_COLOR to disable ANSI output."
 }
 
 #[cfg(test)]
@@ -159,6 +163,7 @@ mod tests {
         assert_eq!(config.color, ColorMode::Auto);
         assert_eq!(config.language, None);
         assert!(!config.pager);
+        assert!(!config.full);
     }
 
     #[test]
@@ -195,6 +200,12 @@ mod tests {
     fn parses_pager() {
         let config = Config::parse(["--pager", "src/main.rs"]).unwrap();
         assert!(config.pager);
+    }
+
+    #[test]
+    fn parses_full() {
+        let config = Config::parse(["--full", "src/main.rs"]).unwrap();
+        assert!(config.full);
     }
 
     #[test]

@@ -26,9 +26,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
+    let stdout_is_terminal = io::stdout().is_terminal();
     let color = should_use_color(
         config.color,
-        io::stdout().is_terminal(),
+        stdout_is_terminal,
         std::env::var_os("NO_COLOR").is_some(),
     );
 
@@ -44,7 +45,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 lang,
                 config.line_numbers,
                 color,
-                config.pager,
+                should_page_view(&source, config.pager, config.full, stdout_is_terminal),
             );
         }
         args::Mode::Diff(diff_config) => {
@@ -140,6 +141,15 @@ fn should_use_color(mode: args::ColorMode, stdout_is_terminal: bool, no_color: b
     }
 }
 
+fn should_page_view(
+    source: &input::Source,
+    explicit_pager: bool,
+    full: bool,
+    stdout_is_terminal: bool,
+) -> bool {
+    !full && (explicit_pager || (stdout_is_terminal && source.path.is_some()))
+}
+
 fn detect_language(source: &input::Source) -> language::Language {
     match source
         .path
@@ -154,8 +164,10 @@ fn detect_language(source: &input::Source) -> language::Language {
 
 #[cfg(test)]
 mod tests {
-    use super::should_use_color;
+    use super::{should_page_view, should_use_color};
     use crate::args::ColorMode;
+    use crate::input::Source;
+    use std::path::PathBuf;
 
     #[test]
     fn color_auto_depends_on_terminal() {
@@ -173,5 +185,60 @@ mod tests {
     fn no_color_overrides_color_modes() {
         assert!(!should_use_color(ColorMode::Always, true, true));
         assert!(!should_use_color(ColorMode::Auto, true, true));
+    }
+
+    #[test]
+    fn files_page_by_default_on_terminal() {
+        let source = Source {
+            path: Some(PathBuf::from("src/main.rs")),
+            content: "fn main() {}\n".to_string(),
+        };
+
+        assert!(should_page_view(&source, false, false, true));
+    }
+
+    #[test]
+    fn full_disables_default_file_pager() {
+        let source = Source {
+            path: Some(PathBuf::from("src/main.rs")),
+            content: "fn main() {}\n".to_string(),
+        };
+
+        assert!(!should_page_view(&source, false, true, true));
+    }
+
+    #[test]
+    fn stdin_and_redirected_output_do_not_page_by_default() {
+        let stdin_source = Source {
+            path: None,
+            content: "fn main() {}\n".to_string(),
+        };
+        let file_source = Source {
+            path: Some(PathBuf::from("src/main.rs")),
+            content: "fn main() {}\n".to_string(),
+        };
+
+        assert!(!should_page_view(&stdin_source, false, false, true));
+        assert!(!should_page_view(&file_source, false, false, false));
+    }
+
+    #[test]
+    fn explicit_pager_still_pages_without_full() {
+        let source = Source {
+            path: None,
+            content: "fn main() {}\n".to_string(),
+        };
+
+        assert!(should_page_view(&source, true, false, false));
+    }
+
+    #[test]
+    fn full_overrides_explicit_pager() {
+        let source = Source {
+            path: Some(PathBuf::from("src/main.rs")),
+            content: "fn main() {}\n".to_string(),
+        };
+
+        assert!(!should_page_view(&source, true, true, true));
     }
 }
