@@ -72,7 +72,11 @@ jobs:
         shell: bash
         run: |
           cd dist
-          sha256sum ${APP_NAME}-${{ matrix.target }}.tar.gz > ${APP_NAME}-${{ matrix.target }}.tar.gz.sha256
+          if command -v sha256sum &> /dev/null; then
+            sha256sum ${APP_NAME}-${{ matrix.target }}.tar.gz > ${APP_NAME}-${{ matrix.target }}.tar.gz.sha256
+          else
+            shasum -a 256 ${APP_NAME}-${{ matrix.target }}.tar.gz > ${APP_NAME}-${{ matrix.target }}.tar.gz.sha256
+          fi
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
