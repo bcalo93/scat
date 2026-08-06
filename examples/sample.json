@@ -1,0 +1,13 @@
+{
+  "name": "scat",
+  "version": "0.1.0",
+  "description": "A small dependency-free bat-like file viewer",
+  "keywords": ["cli", "highlight", "terminal"],
+  "license": "MIT",
+  "config": {
+    "theme": "dark",
+    "line_numbers": true,
+    "max_width": 120
+  },
+  "dependencies": {}
+}
