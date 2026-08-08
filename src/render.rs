@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
 use crate::ansi;
-use crate::highlight::{SimpleHighlighter, SyntaxHighlighter};
+use crate::highlight::create_highlighter;
 use crate::language::Language;
 
 #[cfg(test)]
@@ -21,7 +21,7 @@ pub fn render_to_writer<W: Write>(
 ) -> io::Result<()> {
     let line_count = content.lines().count().max(1);
     let width = line_count.to_string().len();
-    let mut highlighter = SimpleHighlighter::new(language);
+    let mut highlighter = create_highlighter(language);
 
     for (index, line) in content.lines().enumerate() {
         if line_numbers {

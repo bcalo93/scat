@@ -1,0 +1,36 @@
+import { Meta } from "@storybook/blocks";
+
+<Meta title="Components/Button" />
+
+# Button Component
+
+The `Button` component is a versatile UI element.
+
+## Usage
+
+```tsx
+import { Button } from "./Button";
+
+<Button label="Click me" onClick={() => alert("clicked")} />
+```
+
+## Props
+
+| Prop     | Type       | Default     | Description          |
+|----------|------------|-------------|----------------------|
+| label    | `string`   | —           | Button text          |
+| onClick  | `function` | —           | Click handler        |
+| variant  | `string`   | `"primary"` | Visual style variant |
+
+## Variants
+
+<Button label="Primary" />
+<Button label="Secondary" variant="secondary" />
+
+The button supports `primary` and `secondary` variants.
+
+> **Tip:** Use the secondary variant for less prominent actions.
+
+---
+
+*Last updated: 2024-01-15*
