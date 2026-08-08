@@ -1,5 +1,4 @@
 use crate::ansi;
-use crate::language::Language;
 
 pub(crate) fn scan_string(chars: &[char], start: usize, quote: char) -> usize {
     let mut index = start + 1;
@@ -52,10 +51,6 @@ pub(crate) fn previous_non_ws_is(chars: &[char], start: usize, expected: char) -
         .rev()
         .find(|ch| !ch.is_whitespace())
         .is_some_and(|ch| *ch == expected)
-}
-
-pub(crate) fn is_jsx(language: Language) -> bool {
-    matches!(language, Language::Jsx | Language::Tsx)
 }
 
 pub(crate) fn looks_like_jsx_tag(chars: &[char], index: usize) -> bool {

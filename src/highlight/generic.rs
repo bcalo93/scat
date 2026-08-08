@@ -2,8 +2,7 @@ use crate::ansi;
 use crate::language::Language;
 
 use super::helpers::{
-    find_after, highlight_jsx_tag, is_ident_continue, is_ident_start, is_jsx, looks_like_jsx_tag,
-    paint_maybe, scan_jsx_tag, scan_string, starts_with,
+    find_after, is_ident_continue, is_ident_start, paint_maybe, scan_string, starts_with,
 };
 use super::SyntaxHighlighter;
 
@@ -59,14 +58,6 @@ impl GenericHighlighter {
             let end = scan_string(&chars, index, ch);
             return Some((
                 ansi::paint(&chars[index..end].iter().collect::<String>(), ansi::GREEN),
-                end,
-            ));
-        }
-
-        if is_jsx(self.language) && ch == '<' && looks_like_jsx_tag(&chars, index) {
-            let end = scan_jsx_tag(&chars, index);
-            return Some((
-                highlight_jsx_tag(&chars[index..end].iter().collect::<String>()),
                 end,
             ));
         }

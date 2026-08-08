@@ -10,7 +10,7 @@ use crate::language::Language;
 use self::generic::GenericHighlighter;
 use self::json::JsonHighlighter;
 use self::jsx::JsxHighlighter;
-use self::markdown::MarkdownHighlighter;
+use self::markdown::{MarkdownHighlighter, MdxHighlighter};
 use self::plain_text::PlainTextHighlighter;
 
 pub trait SyntaxHighlighter {
@@ -26,7 +26,8 @@ pub fn create_highlighter(language: Language) -> Box<dyn SyntaxHighlighter> {
             Box::new(GenericHighlighter::new(language))
         }
         Language::Jsx | Language::Tsx => Box::new(JsxHighlighter::new(language)),
-        Language::Markdown | Language::Mdx => Box::new(MarkdownHighlighter::new(language)),
+        Language::Markdown => Box::new(MarkdownHighlighter::new()),
+        Language::Mdx => Box::new(MdxHighlighter::new()),
     }
 }
 
