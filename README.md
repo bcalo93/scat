@@ -82,6 +82,7 @@ Detection is extension-based for files and intentionally simple:
 - Java
 - Markdown
 - MDX
+- Shell
 
 For stdin, `scat` infers JSON when the content starts with `{` or `[`.
 Use `--language <lang>` for anything else.
