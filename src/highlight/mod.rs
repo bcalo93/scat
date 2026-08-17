@@ -22,7 +22,7 @@ pub fn create_highlighter(language: Language) -> Box<dyn SyntaxHighlighter> {
         Language::PlainText => Box::new(PlainTextHighlighter),
         Language::Json => Box::new(JsonHighlighter),
         Language::JavaScript | Language::TypeScript | Language::Go | Language::Rust
-        | Language::Swift | Language::Kotlin | Language::Java => {
+        | Language::Swift | Language::Kotlin | Language::Java | Language::Shell => {
             Box::new(GenericHighlighter::new(language))
         }
         Language::Jsx | Language::Tsx => Box::new(JsxHighlighter::new(language)),

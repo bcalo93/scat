@@ -19,6 +19,10 @@ impl GenericHighlighter {
         }
     }
 
+    fn uses_hash_comments(&self) -> bool {
+        matches!(self.language, Language::Shell)
+    }
+
     pub fn highlight_token(&mut self, line: &str, index: usize) -> Option<(String, usize)> {
         let chars: Vec<char> = line.chars().collect();
         if index >= chars.len() {
@@ -53,6 +57,13 @@ impl GenericHighlighter {
         }
 
         let ch = chars[index];
+
+        if self.uses_hash_comments() && ch == '#' {
+            return Some((
+                ansi::paint(&chars[index..].iter().collect::<String>(), ansi::BRIGHT_BLACK),
+                chars.len(),
+            ));
+        }
 
         if ch == '"' || ch == '\'' || ch == '`' {
             let end = scan_string(&chars, index, ch);

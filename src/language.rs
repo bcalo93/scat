@@ -14,6 +14,7 @@ pub enum Language {
     Java,
     Markdown,
     Mdx,
+    Shell,
     PlainText,
 }
 
@@ -32,6 +33,7 @@ impl Language {
             "java" => Some(Self::Java),
             "md" | "markdown" => Some(Self::Markdown),
             "mdx" => Some(Self::Mdx),
+            "sh" | "shell" | "bash" | "zsh" => Some(Self::Shell),
             "text" | "txt" | "plain" | "plaintext" => Some(Self::PlainText),
             _ => None,
         }
@@ -52,6 +54,7 @@ impl Language {
             "java" => Some(Self::Java),
             "md" | "markdown" | "mdown" | "mkd" => Some(Self::Markdown),
             "mdx" => Some(Self::Mdx),
+            "sh" | "bash" | "zsh" => Some(Self::Shell),
             _ => None,
         }
     }
@@ -325,6 +328,41 @@ impl Language {
                 "void",
                 "while",
             ],
+            Self::Shell => &[
+                "if",
+                "then",
+                "else",
+                "elif",
+                "fi",
+                "for",
+                "while",
+                "until",
+                "do",
+                "done",
+                "case",
+                "esac",
+                "function",
+                "return",
+                "exit",
+                "in",
+                "local",
+                "export",
+                "source",
+                "readonly",
+                "declare",
+                "set",
+                "unset",
+                "shift",
+                "trap",
+                "eval",
+                "exec",
+                "true",
+                "false",
+                "test",
+                "echo",
+                "printf",
+                "read",
+            ],
         }
     }
 }
@@ -357,6 +395,14 @@ mod tests {
             Some(Language::Mdx)
         );
         assert_eq!(Language::from_path(Path::new("notes.txt")), None);
+        assert_eq!(
+            Language::from_path(Path::new("deploy.sh")),
+            Some(Language::Shell)
+        );
+        assert_eq!(
+            Language::from_path(Path::new("script.bash")),
+            Some(Language::Shell)
+        );
     }
 
     #[test]
@@ -371,6 +417,9 @@ mod tests {
         );
         assert_eq!(Language::from_name("plain"), Some(Language::PlainText));
         assert_eq!(Language::from_name("ruby"), None);
+        assert_eq!(Language::from_name("shell"), Some(Language::Shell));
+        assert_eq!(Language::from_name("bash"), Some(Language::Shell));
+        assert_eq!(Language::from_name("sh"), Some(Language::Shell));
     }
 
     #[test]
